@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>02. Interactive Novel: Our Class, An Event for Everyone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0fdfa; /* teal-50 */
+        }
+        .concept-term {
+            cursor: pointer;
+            font-weight: 700;
+            color: #0d9488; /* teal-600 */
+            border-bottom: 2px dotted #5eead4; /* teal-300 */
+            transition: all 0.2s ease-in-out;
+        }
+        .concept-term:hover {
+            color: #14b8a6; /* teal-500 */
+            background-color: #ccfbf1; /* teal-100 */
+        }
+        .action-button {
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .choice-button {
+             background-color: white;
+             border: 1px solid #99f6e4; /* teal-200 */
+             color: #0f766e; /* teal-700 */
+             transition: all 0.2s ease-in-out;
+        }
+        .choice-button:hover {
+            background-color: #f0fdfa; /* teal-50 */
+            border-color: #2dd4bf; /* teal-400 */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        #story-content p {
+            margin-bottom: 1rem;
+            line-height: 1.75;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div id="start-screen" class="container mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 flex flex-col justify-center min-h-screen">
+        <div class="bg-white p-6 sm:p-8 md:p-12 rounded-2xl shadow-xl text-center">
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-800">02. Our Class, An Event for Everyone</h1>
+            <p class="text-slate-600 mt-3 text-base">Author: Pinky-Ne</p>
+            <p class="text-slate-500 mt-6 mb-8 text-sm sm:text-base">Before we begin, tell us a little about yourself!<br>You'll become the main character and have more fun.</p>
+            
+            <div class="space-y-4 mb-4">
+                 <input type="text" id="school-input" placeholder="School Name (e.g., Oakwood Elementary)" class="w-full p-3 border border-slate-300 rounded-lg text-center bg-slate-50" />
+                 <div class="grid grid-cols-2 gap-4">
+                     <input type="text" id="grade-input" placeholder="Grade (e.g., 5)" class="w-full p-3 border border-slate-300 rounded-lg text-center bg-slate-50" />
+                     <input type="text" id="class-input" placeholder="Class Name (e.g., Room 204)" class="w-full p-3 border border-slate-300 rounded-lg text-center bg-slate-50" />
+                 </div>
+                 <input type="text" id="name-input" placeholder="Your Name (e.g., Alex Smith)" class="w-full p-3 border border-slate-300 rounded-lg text-center bg-slate-50" />
+            </div>
+            <p class="text-xs text-slate-400 mb-6">If you leave this blank, we'll start with "Alex Smith" from "Oakwood Elementary, 5th Grade, Room 204".</p>
+
+             <div class="bg-slate-100 p-3 rounded-lg text-xs text-slate-500 mb-8">
+                 <p class="font-bold mb-1">Don't worry!</p>
+                 <p>The information you enter is not collected or stored. It's only used to customize the story on your screen and is never sent anywhere.</p>
+             </div>
+
+            <button id="start-button" class="action-button w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 sm:py-4 px-4 rounded-lg text-base sm:text-lg">Start Story</button>
+            <button id="continue-button" class="action-button w-full bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-4 rounded-lg mt-4" style="display: none;">Continue</button>
+        </div>
+        <footer class="text-center py-6 text-slate-500 text-xs">
+            <p>made by. <span id="admin-trigger" class="font-bold cursor-pointer hover:underline">Pinky-Ne</span></p>
+            <p class="mt-1">This work can be freely distributed, shared, and used for educational purposes, provided the original author (Pinky-Ne) is credited.</p>
+        </footer>
+    </div>
+
+
+    <div id="app" class="container mx-auto max-w-4xl p-4 md:p-8" style="display: none;">
+        <main id="main-content" class="bg-white p-6 md:p-10 rounded-2xl shadow-lg min-h-[400px]">
+            <div id="story-content"></div>
+            <div id="chart-container" class="w-full max-w-md mx-auto h-64 my-8" style="display: none;">
+                <canvas id="opinionChart"></canvas>
+            </div>
+            <div id="choices-container" class="mt-8 grid grid-cols-1 gap-4"></div>
+        </main>
+
+        <footer id="report-section" class="mt-12" style="display: none;">
+             <h2 class="text-2xl md:text-3xl font-bold text-slate-900 text-center mb-8">Deep Dive Analysis Report</h2>
+             <p class="text-center text-slate-500 -mt-6 mb-8">Let's find out what your choices meant, shall we?</p>
+             <div id="report-capture-area" class="bg-white p-6 md:p-10 rounded-2xl shadow-lg">
+                 <div id="report-path"></div>
+                 <div id="report-result" class="bg-amber-50 border border-amber-200 p-6 rounded-lg mt-8"></div>
+             </div>
+             <div id="report-buttons" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
+                  <button id="restart-button" class="action-button bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-4 rounded-lg">Start Over</button>
+                  <button id="save-image-button" class="action-button bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg">Save Report as Image</button>
+                  <a href="https://pinkylucky.tistory.com/category/%EC%9D%B8%ED%84%B0%EB%9E%99%ED%8B%B0%EB%B8%8C%20%EC%86%8C%EC%84%A4/%EC%82%AC%ED%H%A_B%A_C%EA%B3%BC" target="_blank" class="action-button text-center bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-lg">Explore Other Stories</a>
+             </div>
+        </footer>
+    </div>
+
+    <div id="concept-popup" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center p-4 z-50" style="display: none;">
+        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-md w-full relative">
+            <h3 id="popup-title" class="text-2xl font-bold text-teal-600 mb-4"></h3>
+            <p id="popup-definition" class="text-slate-600"></p>
+            <button id="popup-close" class="absolute top-4 right-4 text-slate-500 hover:text-slate-800 text-2xl font-bold">&times;</button>
+        </div>
+    </div>
+    
+    <div id="award-popup" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center p-4 z-50" style="display: none;">
+        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-md w-full relative text-center">
+            <h3 class="text-2xl font-bold text-amber-500 mb-4">🎉 Announcing the Winners! 🎉</h3>
+            <ul id="winner-list" class="text-left bg-slate-50 p-4 rounded-lg my-6 space-y-2">
+                <li id="grand-prize" class="font-bold text-teal-600 text-lg bg-teal-100 p-2 rounded"></li>
+                <li>Excellence Award - Sunshine Elementary, 6th Grade, Room 301</li>
+                <li>Merit Award - Starlight Elementary, 6th Grade, The Galaxy Class</li>
+                <li>Honorable Mention - Blue Ocean School, 4th Grade, The Sea Class</li>
+            </ul>
+            <button id="award-popup-close" class="action-button bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-6 rounded-lg">OK</button>
+        </div>
+    </div>
+    
+    <div id="password-modal-container" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none; background-color: rgba(0,0,0,0.5);">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-stone-200">
+            <h3 class="text-xl font-bold text-teal-700 mb-4">Admin Menu</h3>
+            <p class="text-stone-600 mb-4">Please enter the password.</p>
+            <input type="password" id="password-input" class="w-full p-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-teal-500">
+            <div class="mt-4 flex justify-end gap-2">
+                <button id="password-cancel-btn" class="bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg choice-btn">Cancel</button>
+                <button id="password-submit-btn" class="bg-teal-600 text-white font-bold py-2 px-4 rounded-lg choice-btn">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editor-modal-container" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none; background-color: rgba(0,0,0,0.5);">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-stone-200">
+            <h3 class="text-xl font-bold text-teal-700 mb-4">Change Character Names</h3>
+            <div class="space-y-4">
+                <div>
+                    <label for="char-liam" class="block text-sm font-medium text-stone-700">Character 1 (Default: Liam)</label>
+                    <input type="text" id="char-liam" class="mt-1 w-full p-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div>
+                    <label for="char-olivia" class="block text-sm font-medium text-stone-700">Character 2 (Default: Olivia)</label>
+                    <input type="text" id="char-olivia" class="mt-1 w-full p-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-teal-500">
+                </div>
+                 <div>
+                    <label for="char-noah" class="block text-sm font-medium text-stone-700">Character 3 (Default: Noah)</label>
+                    <input type="text" id="char-noah" class="mt-1 w-full p-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-teal-500">
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end gap-2">
+                <button id="editor-cancel-btn" class="bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg choice-btn">Cancel</button>
+                <button id="editor-save-btn" class="bg-teal-600 text-white font-bold py-2 px-4 rounded-lg choice-btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Story and concept data
+        const storyData = {
+            start: {
+                text: [
+                    "It's finally the announcement day for the National Children's Video <span class='concept-term' data-concept='Contest'>Contest</span>. A tense silence fills the {{grade}}th Grade, {{class}} classroom. The homeroom teacher, Ms. Davis, has the contest website pulled up on the smartboard, and all the students are holding their breath.",
+                    "The mouse cursor hovers over the 'View Results' button. 'Okay, is everyone ready?' the teacher asks. The students shout 'Yes!' but their hands are clasped tightly. Every second feels like a minute."
+                ],
+                choices: [
+                    { text: "View Results", action: 'showAwardPopup', next: 'award_ceremony' }
+                ]
+            },
+            award_ceremony: {
+                text: [
+                    "'Woooooow!' The classroom erupts in cheers. The students hug each other and exchange high-fives, sharing their joy.",
+                    "After the excitement dies down, the teacher announces that the prize money is $500. She adds, 'This prize was possible because of everyone's hard work and support. So, we must decide how to use it together, democratically.'",
+                    "The teacher appoints you, '{{name}}', known for being thoughtful and a good listener, along with a few other students, to the 'Budget Committee.' The committee is given the important <span class='concept-term' data-concept='Responsibility'>Responsibility</span> of creating a 'fair' plan for the entire class."
+                ],
+                next: 'meeting1'
+            },
+            meeting1: {
+                text: [
+                    "As soon as the first budget committee meeting started, {{liam}}, the video's director, jumped up and exclaimed, 'An amusement park, obviously! We all promised while we were working late on the video. If we win first place, we go to the amusement park!' Many students cheered in response to {{liam}}'s words. The classroom was soon buzzing with talk of the amusement park.",
+                    "But not everyone was excited. {{olivia}}, who uses a wheelchair, quietly raised her hand. 'Um... an amusement park sounds fun, but there are a lot of rides I can't go on, and there are so many stairs...' Her voice trailed off, her face filled with worry.",
+                    "Meanwhile, your best friend, {{noah}}, gently tugs on your sleeve and whispers, '{{name}}, I don't think I can spend any money at the amusement park... Even if the prize money covers the ticket, the food and snacks there are so expensive.'",
+                    "In the noisy classroom, you realize that the different needs and desires of your friends are clashing. As a committee member, what principle should you use to solve this complex problem?"
+                ],
+                choices: [
+                    { text: "Argue for the amusement park, since that's what most students want.", next: 'choice1_A' },
+                    { text: "Say that it's important for everyone to participate, without exception.", next: 'choice1_B' },
+                    { text: "Suggest postponing the decision to find another solution that satisfies everyone.", next: 'choice1_C' }
+                ],
+                choiceTitle: "What is your opinion?"
+            },
+            choice1_A: {
+                text: [
+                    "You decided to respect the majority opinion, saying, 'The best way is what most of our friends want.' The meeting's atmosphere instantly became lively. {{liam}} started drawing a map of the amusement park on the board, and students excitedly discussed which rides to go on first and in what order. The classroom buzzed as if they were already there.",
+                    "But then, you notice the sad faces of {{olivia}} and {{noah}} in the corner. They seem to be feeling a sense of <span class='concept-term' data-concept='Exclusion'>Exclusion</span> from the joyful atmosphere. A corner of your heart feels uneasy.",
+                    "During recess, {{olivia}} wheels over to you and says quietly, '{{name}}, our class <span class='concept-term' data-concept='Constitution'>Constitution</span> states that all members have an <span class='concept-term' data-concept='Right to Equality'>Right to Equality</span> in class activities. But this... doesn't feel right. I'm upset because it doesn't seem like a decision for everyone.'",
+                    "{{olivia}}'s voice is full of disappointment. In the name of the majority's fun, are the <span class='concept-term' data-concept='Rights'>Rights</span> of the <span class='concept-term' data-concept='Minority'>Minority</span> being forgotten? Is this okay?"
+                ],
+                next: 'meeting2'
+            },
+            choice1_B: {
+                text: [
+                    "You emphasized the importance of everyone participating, saying, 'If even one person is left out, we can't call it a whole-class activity.' A brief silence fell over the noisy meeting. {{olivia}} and {{noah}} looked at you with grateful eyes. A few other students nodded in agreement.",
+                    "But {{liam}} spoke up, frustrated. 'The prize money is a reward for the video we worked so hard on. Why can't we even use it how we want? Don't we have the <span class='concept-term' data-concept='Right to Freedom'>Right to Freedom</span> to enjoy our prize? Why should the majority have to sacrifice for the <span class='concept-term' data-concept='Minority'>Minority</span>?'",
+                    "Other students who were looking forward to the amusement park began to murmur in agreement with {{liam}}. '{{liam}} is right!', 'Are we just going to do boring stuff all the time?' Your choice for inclusion has sparked a new conflict, dividing your friends. How will you resolve this situation?"
+                ],
+                next: 'meeting2'
+            },
+            choice1_C: {
+                text: [
+                    "You suggested, 'The amusement park is a good idea, and it's important to have fun together. But maybe there's an even better way?' and proposed postponing a hasty decision to find a better alternative. For a few days, the committee explored various ideas: a VR experience center, a fancy buffet, renting out a whole movie theater for the class, inviting a famous author for a talk. You searched the internet and looked at what other schools had done.",
+                    "But the more you researched, the clearer the differences in opinion became. The class split into two firm groups: 'Team Thrills - Amusement Park!' and 'Team Together - In-School Activities!' Small arguments even broke out in the hallways.",
+                    "{{olivia}} argued for the <span class='concept-term' data-concept='Right to Equality'>Right to Equality</span>, the <span class='concept-term' data-concept='Right'>Right</span> for everyone to participate without discrimination, while {{liam}} argued for the <span class='concept-term' data-concept='Right to Freedom'>Right to Freedom</span>, the <span class='concept-term' data-concept='Right'>Right</span> for the majority to choose what they want. Time is passing, and a decision must be made. The conflict remains unresolved, and everyone is getting tired."
+                ],
+                next: 'meeting2'
+            },
+            meeting2: {
+                text: [
+                    "With the situation at a stalemate, {{olivia}} deeply considers how to make her voice heard. She wonders, 'Am I being too selfish? Or should I confidently stand up for my <span class='concept-term' data-concept='Rights'>Rights</span>?' Confused, she asks you for advice.",
+                    "Beside her, {{noah}} adds in a small voice, 'I don't want to be a burden to my parents... But I'm scared my friends will think I'm weird if I say that.' Faced with your friends' concerns, you ponder what the best advice would be."
+                ],
+                choices: [
+                    { text: "Advise her to file a formal objection based on the class constitution.", next: 'choice2_A' },
+                    { text: "Suggest talking to {{liam}} privately to find a compromise.", next: 'choice2_B' },
+                    { text: "Advise her to appeal to emotions by sharing her feelings of exclusion with the class.", next: 'choice2_C' }
+                ],
+                choiceTitle: "What would be the best approach?"
+            },
+            choice2_A: {
+                text: [ "You encouraged {{olivia}} to exercise her <span class='concept-term' data-concept='Right to Petition'>Right to Petition</span>. 'That's what rules are for.' Empowered by your words, {{olivia}} stood up at the next class meeting and, with a trembling voice, spoke clearly.",
+                "'I formally object to the amusement park budget plan based on Article 5 of our class <span class='concept-term' data-concept='Constitution'>Constitution</span>, the Right to Equality. I request that we reconsider an activity that our entire class can participate in.'",
+                "A heavy silence fell over the classroom. The students looked back and forth between {{olivia}} and {{liam}}, surprised. {{liam}}'s face turned red with embarrassment. Now, this was no longer a disagreement between a few students but an official issue the whole class had to resolve according to the rules." ],
+                next: 'final_meeting_setup'
+            },
+            choice2_B: {
+                text: ["You thought dialogue was better than direct confrontation. 'Let's try talking it out before we fight.' After school, you brought {{olivia}} and {{liam}} to the quiet library. The atmosphere was awkward at first, but with your mediation, they slowly began to open up.",
+                "{{liam}} confessed his <span class='concept-term' data-concept='Reward Mentality'>Reward Mentality</span>, 'I wasn't trying to ignore your feelings, {{olivia}}. It's just that everyone was so excited... and our video team worked really hard. I wanted to give them a fun reward.' {{olivia}} couldn't finish her sentence, 'I don't want to ruin everyone's fun. But I... I want to be included too. I don't want to feel the <span class='concept-term' data-concept='Exclusion'>Exclusion</span> of just watching.'",
+                "They didn't reach a complete <span class='concept-term' data-concept='Agreement'>Agreement</span>, but they came to understand each other's perspectives a little better. However, the fundamental problem remained unresolved as they headed into the final meeting."],
+                next: 'final_meeting_setup'
+            },
+            choice2_C: {
+                text: [ "You advised that appealing to emotions would be more effective than rules. The next day, at the class meeting, {{olivia}} tearfully spoke about her feelings of <span class='concept-term' data-concept='Exclusion'>Exclusion</span> and sadness. 'When everyone was excitedly talking about the amusement park, I felt like... I was talking to a wall. It felt like everyone was on one team except for me... I felt so lonely.'", 
+                "The classroom grew solemn at {{olivia}}'s heartfelt words, and a few students teared up with her. {{liam}} lowered his head, looking sorry. But after a moment, one student cautiously said, 'I feel really bad for {{olivia}}, but we can't just ignore the majority opinion. What about our freedom?'", 
+                "Other students nodded in agreement. Perhaps an appeal to <span class='concept-term' data-concept='Morality'>Morality</span> alone is not enough to solve this complex problem." ],
+                next: 'final_meeting_setup'
+            },
+            final_meeting_setup: {
+                text: [ "Finally, the final class meeting on the budget was held. After all the discussions, it was time for a vote that would have a <span class='concept-term' data-concept='Binding Force'>Binding Force</span> on the class's future. Before the vote, the teacher asked you, as the representative of the budget committee that has been mediating the conflict, to present a final <span class='concept-term' data-concept='Recommendation'>Recommendation</span>. Your words will greatly influence your friends' final decision.",
+                "You stand up and look around at your classmates. Eager eyes, anxious eyes, and many gazes fixed on you. Now, you must decide the direction of this debate with your voice." ],
+                chart: true,
+                next: 'final_meeting'
+            },
+            final_meeting: {
+                text: [],
+                choices: [
+                    { text: "Let's go to the amusement park. We can't give up the majority's fun for one person.", next: 'end_A' },
+                    { text: "Let's have an in-school movie festival and party that everyone can join.", next: 'end_B' },
+                    { text: "Let's split the budget to have a party and create a 'Class Inclusion Fund'.", next: 'end_C' }
+                ],
+                choiceTitle: "What judgment should be made for our community?"
+            },
+            end_A: {
+                ending: true,
+                title: "Ending: The Majority's Joy and the Minority's Shadow",
+                result: [ "In the end, your class went to the amusement park. Most students had a fantastic time, but {{olivia}} had to wait around often, unable to use several facilities, and {{noah}} seemed withdrawn the whole time.", "On the bus back, amidst the excited chatter of your friends, you saw {{olivia}}'s lonely figure looking out the window. Among the happy faces in the group photo, a few shadows are visible. You followed the democratic process of <span class='concept-term' data-concept='Majority Rule'>Majority Rule</span>, but you created happy memories for 'most of our class' instead of 'all of our class.' This experience left a deep question about why a majority decision isn't always the right one and why mechanisms are needed to protect the <span class='concept-term' data-concept='Rights'>Rights</span> of the <span class='concept-term' data-concept='Minority'>Minority</span>."],
+                conclusion: { title: "Conclusion: Your choice identifies you as a ‘Pragmatist Focused on Efficiency’.", emoji: "⚖️", explanation: "You prioritized solving the problem quickly and efficiently by following established principles and the majority opinion. Thanks to this, the class made a swift decision without major conflict, but you may not have fully addressed the feelings of exclusion some friends experienced. Remember that taking the time to consider everyone's feelings is just as important as a quick decision." }
+            },
+            end_B: {
+                ending: true,
+                title: "Ending: A Quiet Memory for Everyone",
+                result: [ "Your class held an in-school movie festival and pizza party, and it was a huge success. Everyone laughed and had fun together, feeling a strong sense of belonging. {{olivia}} became the party's DJ, sharing great music, and {{noah}} enjoyed the party to the fullest without any financial worries.", "But after the party, {{liam}} approached you and said wistfully, '{{name}}, this was nice, of course. But... to be honest, the video team is a little disappointed. We were hoping for a special reward for all our hard work.' You achieved perfect inclusion, but perhaps the special recognition for some friends' efforts was lacking. This experience makes you think about how the community's <span class='concept-term' data-concept='Responsibility'>Responsibility</span> and an individual's <span class='concept-term' data-concept='Rights'>Rights</span> can be balanced, and how 'equality' can sometimes conflict with 'reward for effort'." ],
+                conclusion: { title: "Conclusion: Your choice identifies you as a ‘Mediator Who Values Relationships’.", emoji: "🤝", explanation: "You valued the relationships and feelings among friends more than rules or efficiency. Your choice warmed the community, but it may not have fully satisfied the desire for reward from those who made special contributions. The best community can be built when you combine a warm heart that embraces everyone with the wisdom to recognize individual efforts." }
+            },
+            end_C: {
+                ending: true,
+                title: "Ending: A New Rule, and a New Problem",
+                result: [ "Following your suggestion, the class split the budget to have a fun party and create a 'Class Inclusion Fund' to support friends in need in the future. The students felt a great sense of pride in making such a mature decision. However, a few days later, a new debate began over how to use the fund.", "'Who will decide who gets support, and based on what criteria?', 'Wouldn't the person applying feel embarrassed?' You realize that a system created with good intentions could inadvertently make friends like {{noah}} feel even more uncomfortable. This decision showed that the community had grown beyond solving an immediate conflict, but it also became a direct experience of the <span class='concept-term' data-concept='Adaptability of Law'>Adaptability of Law</span>—how even a seemingly perfect system can create new challenges." ],
+                conclusion: { title: "Conclusion: Your choice identifies you as an ‘Innovator Who Designs the Future’.", emoji: "💡", explanation: "You looked beyond the immediate problem and focused on creating a system for a better future. Thanks to your innovative thinking, the community grew, but it's also important to reflect on whether you might have overlooked the immediate feelings of individuals in the process. A perfect community is created when a great system and a warm heart go together." }
+            }
+        };
+
+        const concepts = {
+            'Right to Equality': 'The right of all citizens to be treated equally before the law, without unfair discrimination based on gender, religion, occupation, etc.',
+            'Right to Freedom': 'The fundamental right to think, act, and express oneself freely without interference from the state.',
+            'Right to Petition': 'The right of citizens to make a request to the government for a specific action. This includes seeking relief through trials when fundamental rights are violated.',
+            'Social Rights': 'The right of all citizens to demand the necessary conditions from the state to live a minimally humane life. This includes rights to education, labor, and a pleasant environment.',
+            'Morality': 'The principles concerning the distinction between right and wrong or good and bad behavior. Unlike law, it is not enforceable and is followed based on individual conscience.',
+            'Limitation of Basic Rights': 'The principle that the fundamental rights of citizens can be restricted by law only when necessary for national security, maintenance of public order, or public welfare.',
+            'Rights': 'The power or qualification to act freely or demand something from others, protected by law.',
+            'Responsibility': 'The duty or obligation that a member of a society is expected to fulfill.',
+            'Adaptability of Law': 'The characteristic of law that allows its content to be changed or new laws to be created as society changes and develops.',
+            'Reward Mentality': 'The psychological expectation of receiving a positive outcome in return for one\'s efforts or hardships.',
+            'Binding Force': 'The power that makes a decision or rule mandatory to follow. Laws have a binding force on everyone.',
+            'Recommendation': 'A proposal of the best-considered solution to a problem to another person or institution. It is not mandatory but has a significant influence on the decision.',
+            'Exclusion': 'The feeling of being left out and lonely, unable to fit in with others.',
+            'Agreement': 'The process or result of all involved parties sharing their opinions and coming to a single conclusion.',
+            'Constitution': 'The supreme law of a country, which is the most fundamental and powerful. It contains the important rights of the people and the basic principles of state operation.',
+            'Majority Rule': 'A method of making decisions based on the opinion supported by the majority of people, which is an important decision-making process in democracy.',
+            'Contest': 'A competition where participants submit works on a given theme, and the best ones are selected and awarded.',
+            'Minority': 'A relatively small group of people within a larger group. In a democracy, the opinions of the minority should be respected as much as the majority\'s.'
+        };
+        
+        // Game state variables
+        let currentStateKey = 'start';
+        let userPath = [];
+        let userGrade = '';
+        let userClass = '';
+        let userName = '';
+        let userSchool = '';
+        let opinionChart = null;
+        let characterNames = { liam: 'Liam', olivia: 'Olivia', noah: 'Noah' };
+
+        const SAVE_KEY = 'socialStorySaveData_v3';
+        const CHAR_SAVE_KEY = 'socialStoryCharNames_v3';
+
+        // Element references
+        const startScreen = document.getElementById('start-screen');
+        const appScreen = document.getElementById('app');
+        const storyContent = document.getElementById('story-content');
+        const choicesContainer = document.getElementById('choices-container');
+        const chartContainer = document.getElementById('chart-container');
+        const reportSection = document.getElementById('report-section');
+        
+        // Admin/Editor Modal elements
+        const adminTrigger = document.getElementById('admin-trigger');
+        const passwordModalContainer = document.getElementById('password-modal-container');
+        const passwordInput = document.getElementById('password-input');
+        const passwordSubmitBtn = document.getElementById('password-submit-btn');
+        const passwordCancelBtn = document.getElementById('password-cancel-btn');
+        const editorModalContainer = document.getElementById('editor-modal-container');
+        const charLiamInput = document.getElementById('char-liam');
+        const charOliviaInput = document.getElementById('char-olivia');
+        const charNoahInput = document.getElementById('char-noah');
+        const editorSaveBtn = document.getElementById('editor-save-btn');
+        const editorCancelBtn = document.getElementById('editor-cancel-btn');
+
+        // --- Utility Functions ---
+        function interpolate(text) {
+            return text
+                .replace(/{{school}}/g, userSchool)
+                .replace(/{{grade}}/g, userGrade)
+                .replace(/{{class}}/g, userClass)
+                .replace(/{{name}}/g, userName)
+                .replace(/{{liam}}/g, characterNames.liam)
+                .replace(/{{olivia}}/g, characterNames.olivia)
+                .replace(/{{noah}}/g, characterNames.noah);
+        }
+
+        // --- Game State Functions ---
+        function saveGame() {
+            const saveData = { currentStateKey, userPath, userSchool, userGrade, userClass, userName };
+            localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+        }
+
+        function loadGame() {
+            const savedData = JSON.parse(localStorage.getItem(SAVE_KEY));
+            if (savedData) {
+                currentStateKey = savedData.currentStateKey;
+                userPath = savedData.userPath;
+                userSchool = savedData.userSchool;
+                userGrade = savedData.userGrade;
+                userClass = savedData.userClass;
+                userName = savedData.userName;
+                return true;
+            }
+            return false;
+        }
+
+        function clearSave() {
+            localStorage.removeItem(SAVE_KEY);
+        }
+        
+        function saveCharacterNames() {
+            localStorage.setItem(CHAR_SAVE_KEY, JSON.stringify(characterNames));
+        }
+
+        function loadCharacterNames() {
+            const savedNames = JSON.parse(localStorage.getItem(CHAR_SAVE_KEY));
+            if (savedNames) {
+                characterNames = savedNames;
+            }
+        }
+
+        // --- UI Rendering Functions ---
+        function startGame() {
+            startScreen.style.display = 'none';
+            appScreen.style.display = 'block';
+            renderScene(currentStateKey);
+        }
+
+        function renderScene(key) {
+            currentStateKey = key;
+            const scene = storyData[key];
+            
+            storyContent.innerHTML = '';
+            choicesContainer.innerHTML = '';
+            chartContainer.style.display = 'none';
+            if(opinionChart) {
+                opinionChart.destroy();
+                opinionChart = null;
+            }
+
+            if(userPath.length > 0 && !scene.ending) {
+                const lastChoice = userPath[userPath.length - 1];
+                const choiceIndicator = document.createElement('div');
+                choiceIndicator.className = "bg-teal-50 border-l-4 border-teal-400 p-4 mb-6 text-teal-800";
+                choiceIndicator.innerHTML = `<p class="font-bold flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd" /></svg> Your Choice: ${lastChoice.text}</p>`;
+                storyContent.appendChild(choiceIndicator);
+            }
+
+            if (scene.text) {
+                scene.text.forEach(paragraph => {
+                    const p = document.createElement('p');
+                    p.innerHTML = interpolate(paragraph);
+                    storyContent.appendChild(p);
+                });
+            }
+
+            if(scene.chart) {
+                chartContainer.style.display = 'block';
+                renderChart();
+            }
+
+            if (scene.choices) {
+                if (scene.choiceTitle) {
+                    const title = document.createElement('h3');
+                    title.className = "text-xl font-bold text-center text-slate-700 my-8";
+                    title.textContent = scene.choiceTitle;
+                    choicesContainer.appendChild(title);
+                }
+
+                scene.choices.forEach(choice => {
+                    const button = document.createElement('button');
+                    button.className = "choice-button w-full font-bold py-3 px-4 rounded-lg";
+                    if (choice.action === 'showAwardPopup') {
+                        button.onclick = () => showAwardPopup(choice.next);
+                    } else {
+                        button.onclick = () => {
+                            userPath.push({from: key, to: choice.next, text: choice.text});
+                            saveGame();
+                            renderScene(choice.next);
+                        };
+                    }
+                    button.textContent = interpolate(choice.text);
+                    choicesContainer.appendChild(button);
+                });
+            } else if (scene.ending) {
+                renderEnding(scene);
+            } else {
+                const nextButton = document.createElement('button');
+                nextButton.className = "action-button w-auto bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 px-6 rounded-lg mx-auto block mt-6";
+                nextButton.textContent = 'Next';
+                nextButton.onclick = () => {
+                    saveGame();
+                    renderScene(scene.next)
+                };
+                choicesContainer.appendChild(nextButton);
+            }
+            
+            attachConceptListeners();
+        }
+        
+        function renderChart(){
+            const ctx = document.getElementById('opinionChart').getContext('2d');
+            opinionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Amusement Park', 'Activity for All', 'Undecided'],
+                    datasets: [{
+                        label: 'Our Classmates\' Opinions (Virtual)',
+                        data: [15, 8, 3],
+                        backgroundColor: ['#67e8f9', '#86efac', '#e5e7eb'],
+                        borderColor: ['#0891b2', '#16a34a', '#9ca3af'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, max: 26, title: { display: true, text: 'Number of Students' } } },
+                    plugins: { legend: { display: false }, title: { display: true, text: 'Opinion Distribution Before Final Vote', font: { size: 16 } } }
+                }
+            });
+        }
+
+        function renderEnding(endingScene) {
+            clearSave();
+            const title = document.createElement('h2');
+            title.className = "text-2xl font-bold text-slate-900 mb-4";
+            title.textContent = endingScene.title;
+            
+            const choiceIndicator = storyContent.querySelector('div');
+            storyContent.innerHTML = ''; 
+            if(choiceIndicator) storyContent.appendChild(choiceIndicator);
+            storyContent.appendChild(title);
+
+            endingScene.result.forEach(paragraph => {
+                const p = document.createElement('p');
+                p.innerHTML = interpolate(paragraph);
+                storyContent.appendChild(p);
+            });
+            
+            attachConceptListeners();
+
+            const reportButton = document.createElement('button');
+            reportButton.className = "action-button w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg mt-8";
+            reportButton.textContent = 'View Deep Dive Analysis Report';
+            reportButton.onclick = () => showReport(endingScene);
+            choicesContainer.appendChild(reportButton);
+        }
+
+        function showReport(endingScene) {
+            document.getElementById('main-content').style.display = 'none';
+            reportSection.style.display = 'block';
+
+            const pathContainer = document.getElementById('report-path');
+            pathContainer.innerHTML = '';
+            
+            const finalAnalysis = [];
+            const firstChoiceKey = userPath[0].to;
+            const secondChoiceKey = userPath[1].to;
+            const thirdChoiceKey = userPath[2].to;
+
+            if (firstChoiceKey === 'choice1_A') {
+                finalAnalysis.push({ title: "Analysis 1: Deciding Our Class's Heart", choice: "You chose to argue for the amusement park, as most friends wanted.", explanation: "You believed that the best method is what most friends want. While majority rule is an important principle in democracy, it's also wise not to lose sight of minority voices in the process." });
+            } else if (firstChoiceKey === 'choice1_B') {
+                finalAnalysis.push({ title: "Analysis 1: Deciding Our Class's Heart", choice: "You chose to say that it's important for everyone to participate, without exception.", explanation: "You tried to uphold the value of community by emphasizing everyone's participation. This was an effort to ensure the practical guarantee of the <span class='concept-term' data-concept='Right to Equality'>Right to Equality</span>." });
+            } else { // choice1_C
+                finalAnalysis.push({ title: "Analysis 1: Deciding Our Class's Heart", choice: "You chose to suggest postponing the decision to find another solution that satisfies everyone.", explanation: "You didn't settle for the immediate options and believed there could be a better way for everyone. You have the qualities of a future leader, looking at problems broadly and seeking fundamental solutions." });
+            }
+
+            if (secondChoiceKey === 'choice2_A') {
+                finalAnalysis.push({ title: "Analysis 2: How to Face Conflict", choice: "You advised filing a formal objection based on the class constitution.", explanation: "Trying to resolve a conflict among friends through the formal rule of a class meeting is a mature attitude. However, sometimes it's necessary to try to understand each other's feelings before asserting rules." });
+            } else if (secondChoiceKey === 'choice2_B') {
+                 finalAnalysis.push({ title: "Analysis 2: How to Face Conflict", choice: "You suggested talking to {{liam}} privately to find a compromise.", explanation: "You chose to have a personal conversation with a friend rather than a public confrontation. You understand well that the most important thing in resolving conflict is the effort to understand each other's positions." });
+            } else { // choice2_C
+                finalAnalysis.push({ title: "Analysis 2: How to Face Conflict", choice: "You advised appealing to emotions by sharing feelings of exclusion.", explanation: "You chose to empathize with a friend's sad feelings first, rather than focusing on rules or logic. This was a choice that shows how important it is to understand others' emotions as much as rational judgment." });
+            }
+
+            if (thirdChoiceKey === 'end_A') {
+                finalAnalysis.push({ title: "Analysis 3: The Moment of Final Decision", choice: "You made a final recommendation to go to the amusement park.", explanation: "In the end, you chose the happiness of more friends. While increasing the community's satisfaction is important, it's also valuable to consider if any friends are saddened by that decision." });
+            } else if (thirdChoiceKey === 'end_B') {
+                finalAnalysis.push({ title: "Analysis 3: The Moment of Final Decision", choice: "You made a final recommendation to have an in-school movie festival and party.", explanation: "You prioritized the <span class='concept-term' data-concept='Right to Equality'>Right to Equality</span> and <span class='concept-term' data-concept='Social Rights'>Social Rights</span> of all members over maximum 'fun.' This was a mature decision for the harmony of the entire community." });
+            } else { // end_C
+                finalAnalysis.push({ title: "Analysis 3: The Moment of Final Decision", choice: "You made a final recommendation to split the budget for a party and a 'Class Inclusion Fund'.", explanation: "You didn't just focus on immediate enjoyment but created a wonderful system to solve potential future problems in your class. This was an excellent choice that demonstrates how laws and rules can advance a society." });
+            }
+
+            finalAnalysis.forEach((item) => {
+                const pathItem = document.createElement('div');
+                pathItem.className = 'bg-slate-50 border border-slate-200 p-4 rounded-lg mb-4';
+                pathItem.innerHTML = `<h4 class="font-bold text-teal-700">${interpolate(item.title)}</h4>
+                                       <p class="text-sm text-slate-500 mt-1 mb-2">${interpolate(item.choice)}</p>
+                                       <p class="text-sm text-slate-600">${interpolate(item.explanation)}</p>`;
+                pathContainer.appendChild(pathItem);
+            });
+
+            const resultContainer = document.getElementById('report-result');
+            resultContainer.innerHTML = `
+                <div class="flex items-start">
+                    <span class="text-4xl mr-4">${endingScene.conclusion.emoji}</span>
+                    <div>
+                         <h4 class="font-bold text-amber-800">${endingScene.conclusion.title}</h4>
+                         <p class="text-sm text-slate-600 mt-2">${endingScene.conclusion.explanation}</p>
+                    </div>
+                </div>`;
+            
+            attachConceptListenersInReport();
+
+            reportSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // --- Popup and Listener Functions ---
+        function attachConceptListeners() {
+            document.querySelectorAll('#app .concept-term').forEach(term => {
+                term.onclick = (e) => { e.stopPropagation(); showPopup(e.target.dataset.concept); };
+            });
+        }
+        function attachConceptListenersInReport() {
+            document.querySelectorAll('#report-section .concept-term').forEach(term => {
+                term.onclick = (e) => { e.stopPropagation(); showPopup(e.target.dataset.concept); };
+            });
+        }
+
+        const popup = document.getElementById('concept-popup');
+        function showPopup(key) {
+            popup.querySelector('#popup-title').textContent = key;
+            popup.querySelector('#popup-definition').textContent = concepts[key];
+            popup.style.display = 'flex';
+        }
+        popup.querySelector('#popup-close').onclick = () => popup.style.display = 'none';
+        popup.onclick = () => popup.style.display = 'none';
+        popup.querySelector('div').onclick = (e) => e.stopPropagation();
+
+        const awardPopup = document.getElementById('award-popup');
+        function showAwardPopup(nextSceneKey) {
+            const grandPrizeLi = awardPopup.querySelector('#grand-prize');
+            grandPrizeLi.innerHTML = `Grand Prize - ${userSchool}, ${userGrade}th Grade, ${userClass}`;
+            
+            awardPopup.style.display = 'flex';
+            
+            awardPopup.querySelector('#award-popup-close').onclick = () => {
+                awardPopup.style.display = 'none';
+                renderScene(nextSceneKey);
+            };
+        }
+        
+        function showPasswordModal() {
+            passwordInput.value = '';
+            passwordModalContainer.style.display = 'flex';
+        }
+
+        function hidePasswordModal() {
+            passwordModalContainer.style.display = 'none';
+        }
+
+        function showEditorModal() {
+            charLiamInput.value = characterNames.liam;
+            charOliviaInput.value = characterNames.olivia;
+            charNoahInput.value = characterNames.noah;
+            editorModalContainer.style.display = 'flex';
+        }
+
+        function hideEditorModal() {
+            editorModalContainer.style.display = 'none';
+        }
+
+
+        // --- Initializer ---
+        window.onload = () => {
+            loadCharacterNames();
+            const schoolInput = document.getElementById('school-input');
+            const gradeInput = document.getElementById('grade-input');
+            const classInput = document.getElementById('class-input');
+            const nameInput = document.getElementById('name-input');
+            const startButton = document.getElementById('start-button');
+            
+            startButton.onclick = () => {
+                userSchool = schoolInput.value.trim() || 'Oakwood Elementary';
+                userGrade = gradeInput.value.trim() || '5';
+                userClass = classInput.value.trim() || 'Room 204';
+                userName = nameInput.value.trim() || 'Alex Smith';
+                
+                currentStateKey = 'start';
+                userPath = [];
+                saveGame();
+                startGame();
+            };
+            
+            if (localStorage.getItem(SAVE_KEY)) {
+                const continueButton = document.getElementById('continue-button');
+                continueButton.style.display = 'block';
+                continueButton.onclick = () => {
+                    if(loadGame()) {
+                       startGame();
+                    }
+                };
+            }
+
+            document.getElementById('restart-button').onclick = () => {
+                clearSave();
+                window.location.reload();
+            };
+
+            document.getElementById('save-image-button').onclick = () => {
+                const captureArea = document.getElementById('report-capture-area');
+                window.scrollTo(0, 0);
+                html2canvas(captureArea, { 
+                    scale: 2,
+                    backgroundColor: '#ffffff'
+                }).then(canvas => {
+                    const image = canvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.href = image;
+                    link.download = `${userClass}_${userName}_Report.png`;
+                    link.click();
+                });
+            };
+            
+            // Admin and Editor modal listeners
+            adminTrigger.addEventListener('click', showPasswordModal);
+            passwordCancelBtn.addEventListener('click', hidePasswordModal);
+            passwordSubmitBtn.addEventListener('click', () => {
+                if (passwordInput.value === 'pinky') {
+                    hidePasswordModal();
+                    setTimeout(showEditorModal, 100); 
+                } else {
+                    alert('Incorrect password.');
+                    passwordInput.value = '';
+                }
+            });
+
+            editorCancelBtn.addEventListener('click', hideEditorModal);
+            editorSaveBtn.addEventListener('click', () => {
+                characterNames.liam = charLiamInput.value || 'Liam';
+                characterNames.olivia = charOliviaInput.value || 'Olivia';
+                characterNames.noah = charNoahInput.value || 'Noah';
+                saveCharacterNames();
+
+                if (appScreen.style.display === 'block') {
+                    renderScene(currentStateKey);
+                }
+                hideEditorModal();
+            });
+        };
+
+    </script>
+</body>
+</html>
